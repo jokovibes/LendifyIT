@@ -536,7 +536,7 @@ const AdminModal = ({ admin, onSave, onCancel }: { admin: Admin | null, onSave: 
     );
 };
 
-// --- Simple SVG Charts ---
+// --- Simple SVG & HTML Charts ---
 
 const SimpleLineChart = ({ data, title }: { data: number[], title: string }) => {
     const height = 150;
@@ -582,36 +582,31 @@ const SimpleLineChart = ({ data, title }: { data: number[], title: string }) => 
     );
 };
 
+/**
+ * Updated SimpleBarChart to use HTML/CSS for labels and bars.
+ * This ensures long item names can wrap and aren't cut off.
+ */
 const SimpleBarChart = ({ data }: { data: { name: string, count: number }[] }) => {
     if (data.length === 0) return <p className="empty-chart">Belum ada data peminjaman.</p>;
 
-    const maxVal = Math.max(...data.map(d => d.count));
-    const rowHeight = 40;
-    const width = 400; 
-    const labelWidth = 140; 
-    const barMaxWidth = width - labelWidth - 40; 
-    const height = data.length * rowHeight;
+    const maxVal = Math.max(...data.map(d => d.count), 1);
 
     return (
-        <div className="chart-container">
-            <svg viewBox={`0 0 ${width} ${height}`} className="bar-chart-svg" style={{width: '100%', height: 'auto'}}>
-            {data.map((item, index) => {
-                const barWidth = (item.count / maxVal) * barMaxWidth;
-                const y = index * rowHeight;
-                return (
-                    <g key={index} transform={`translate(0, ${y})`}>
-                        <text x={labelWidth - 10} y={25} textAnchor="end" className="chart-text label" fill="var(--text-color)" fontSize="14">
-                            {item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name}
-                        </text>
-                        <rect x={labelWidth} y={10} width={barMaxWidth} height={20} fill="var(--background-color)" rx="4" />
-                        <rect x={labelWidth} y={10} width={Math.max(barWidth, 5)} height={20} fill="var(--primary-color)" rx="4" />
-                        <text x={labelWidth + barWidth + 10} y={25} className="chart-text value" fill="var(--text-color)" fontWeight="bold" fontSize="14">
-                            {item.count}
-                        </text>
-                    </g>
-                );
-            })}
-            </svg>
+        <div className="html-bar-chart">
+            {data.map((item, index) => (
+                <div key={index} className="bar-row">
+                    <div className="bar-label-container">
+                        <span className="bar-label">{item.name}</span>
+                        <span className="bar-value">{item.count} <small>pinjaman</small></span>
+                    </div>
+                    <div className="bar-track">
+                        <div 
+                            className="bar-fill" 
+                            style={{ width: `${(item.count / maxVal) * 100}%` }}
+                        ></div>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };
