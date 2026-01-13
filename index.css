@@ -1253,12 +1253,15 @@ main {
     border-radius: var(--border-radius);
 }
 
+<<<<<<< HEAD
 .stat-row.main-stat {
     border: 1px solid var(--border-color);
     background-color: rgba(13, 71, 161, 0.1);
     padding: 1.25rem;
 }
 
+=======
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
 .stat-label {
     color: var(--secondary-color);
     font-weight: 500;
@@ -1273,6 +1276,7 @@ main {
 .stat-value.highlight-warning { color: var(--warning-color); }
 .stat-value.highlight-success { color: var(--success-color); }
 
+<<<<<<< HEAD
 /* Category Summary List Breakdown */
 .category-summary-list {
     display: flex;
@@ -1296,6 +1300,8 @@ main {
     color: var(--text-color);
 }
 
+=======
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
 /* HTML/CSS Bar Chart Styles */
 .html-bar-chart {
     display: flex;

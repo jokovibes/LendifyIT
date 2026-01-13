@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js';
@@ -632,7 +636,11 @@ const SimpleDonutChart = ({ data, title = "Distribusi Kategori" }: { data: { nam
                 <div className="donut-chart" style={{ background: `conic-gradient(${gradient})` }}>
                     <div className="donut-hole">
                         <span>{total}</span>
+<<<<<<< HEAD
                         <small>Unit</small>
+=======
+                        <small>Items</small>
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
                     </div>
                 </div>
                 <div className="donut-legend">
@@ -1199,10 +1207,16 @@ const App = () => {
       const colors = ['#0d47a1', '#26a69a', '#ef5350', '#ffca28', '#5c6bc0', '#90a4ae'];
       const data: any[] = [];
       categories.forEach((cat, idx) => {
+<<<<<<< HEAD
           // Changed from item count to total quantity sum for better "Total Asset" visualization
           const totalUnitsInCat = items.filter(i => i.categoryId === cat.id).reduce((acc, i) => acc + i.quantity, 0);
           if (totalUnitsInCat > 0) {
               data.push({ name: cat.name, value: totalUnitsInCat, color: colors[idx % colors.length] });
+=======
+          const count = items.filter(i => i.categoryId === cat.id).length;
+          if (count > 0) {
+              data.push({ name: cat.name, value: count, color: colors[idx % colors.length] });
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
           }
       });
       return data;
@@ -1482,6 +1496,7 @@ const App = () => {
                                 <div className="report-actions"><button className="btn btn-secondary btn-sm" onClick={handlePrint}>Cetak</button><button className="btn btn-primary btn-sm" onClick={handleExportPDF}>PDF</button></div>
                             </div>
                             <div className="report-grid">
+<<<<<<< HEAD
                                 <div className="report-card">
                                     <h3>Ringkasan Aset</h3>
                                     <div className="summary-stats-vertical">
@@ -1507,6 +1522,12 @@ const App = () => {
                                 <div className="report-card">
                                     <SimpleDonutChart data={getCategoryData()} title="Proporsi Aset per Kategori" />
                                 </div>
+=======
+                                <div className="report-card"><h3>Ringkasan</h3><div className="summary-stats-vertical"><div className="stat-row"><span>Total Aset</span><span>{items.length}</span></div><div className="stat-row"><span>Dipinjam</span><span className="highlight-warning">{loanHistory.filter(l => l.status === 'borrowed').length}</span></div></div></div>
+                                <div className="report-card"><h3>Populer</h3><SimpleBarChart data={popularItems} /></div>
+                                <div className="report-card"><SimpleLineChart data={getLast7DaysData()} title="Tren 7 Hari" /></div>
+                                <div className="report-card"><SimpleDonutChart data={getCategoryData()} /></div>
+>>>>>>> 39d32fdfccd786d5cb3a3aac84951a573d2b2a83
                             </div>
                             <div className="report-card">
                                 <h3>Detail Transaksi</h3>
