@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js';
@@ -582,30 +583,91 @@ const SimpleLineChart = ({ data, title }: { data: number[], title: string }) => 
 };
 
 /**
- * Updated SimpleBarChart to use HTML/CSS for labels and bars.
- * This ensures long item names can wrap and aren't cut off.
+ * BorrowedFrequencyChart to use SVG Vertical Bars.
+ * Handles long labels by tilting them.
  */
-const SimpleBarChart = ({ data }: { data: { name: string, count: number }[] }) => {
-    if (data.length === 0) return <p className="empty-chart">Belum ada data peminjaman.</p>;
+const BorrowedFrequencyChart = ({ data, barColor = "var(--info-color)" }: { data: { name: string, count: number }[], barColor?: string }) => {
+    const width = 400;
+    const height = 300;
+    const margin = { top: 20, right: 20, bottom: 80, left: 40 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    if (data.length === 0) return <p className="empty-chart">Belum ada data untuk ditampilkan.</p>;
 
     const maxVal = Math.max(...data.map(d => d.count), 1);
+    const barWidth = chartWidth / data.length;
 
     return (
-        <div className="html-bar-chart">
-            {data.map((item, index) => (
-                <div key={index} className="bar-row">
-                    <div className="bar-label-container">
-                        <span className="bar-label">{item.name}</span>
-                        <span className="bar-value">{item.count} <small>pinjaman</small></span>
-                    </div>
-                    <div className="bar-track">
-                        <div 
-                            className="bar-fill" 
-                            style={{ width: `${(item.count / maxVal) * 100}%` }}
-                        ></div>
-                    </div>
-                </div>
-            ))}
+        <div className="chart-container">
+            <svg viewBox={`0 0 ${width} ${height}`} className="bar-chart-svg">
+                {/* Horizontal Grid Lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map(p => (
+                    <line
+                        key={p}
+                        x1={margin.left}
+                        y1={margin.top + (1 - p) * chartHeight}
+                        x2={width - margin.right}
+                        y2={margin.top + (1 - p) * chartHeight}
+                        stroke="var(--border-color)"
+                        strokeWidth="1"
+                        strokeDasharray="4"
+                    />
+                ))}
+                
+                {data.map((item, i) => {
+                    const barHeight = (item.count / maxVal) * chartHeight;
+                    const x = margin.left + i * barWidth + 10;
+                    const y = height - margin.bottom - barHeight;
+                    const barW = barWidth - 20;
+
+                    return (
+                        <g key={i}>
+                            {/* Bar */}
+                            <rect
+                                x={x}
+                                y={y}
+                                width={barW}
+                                height={barHeight}
+                                fill={barColor}
+                                rx="4"
+                                className="chart-bar"
+                            />
+                            {/* Value Label above bar */}
+                            <text
+                                x={x + barW / 2}
+                                y={y - 5}
+                                textAnchor="middle"
+                                fontSize="12"
+                                fontWeight="bold"
+                                fill="var(--text-color)"
+                            >
+                                {item.count}
+                            </text>
+                            {/* Tilted Axis Label */}
+                            <text
+                                x={x + barW / 2}
+                                y={height - margin.bottom + 15}
+                                textAnchor="end"
+                                fontSize="10"
+                                fill="var(--secondary-color)"
+                                transform={`rotate(-35, ${x + barW / 2}, ${height - margin.bottom + 15})`}
+                            >
+                                {item.name.length > 20 ? item.name.substring(0, 17) + '...' : item.name}
+                            </text>
+                        </g>
+                    );
+                })}
+                {/* Bottom Axis Line */}
+                <line 
+                    x1={margin.left} 
+                    y1={height - margin.bottom} 
+                    x2={width - margin.right} 
+                    y2={height - margin.bottom} 
+                    stroke="var(--border-color)" 
+                    strokeWidth="2" 
+                />
+            </svg>
         </div>
     );
 };
@@ -1137,7 +1199,14 @@ const App = () => {
     if (reportElement) {
         addNotification('Sedang membuat PDF...', 'info');
         // @ts-ignore
-        html2canvas(reportElement, { scale: 2 }).then((canvas) => {
+        html2canvas(reportElement, { 
+            scale: 2,
+            backgroundColor: '#ffffff', // Force white background for the capture
+            onclone: (clonedDoc: Document) => {
+                // Add a class to the cloned document body to trigger light-theme CSS overrides
+                clonedDoc.body.classList.add('pdf-export-mode');
+            }
+        }).then((canvas) => {
             // @ts-ignore
             const { jsPDF } = window.jspdf;
             const imgData = canvas.toDataURL('image/png');
@@ -1199,6 +1268,7 @@ const App = () => {
       const colors = ['#0d47a1', '#26a69a', '#ef5350', '#ffca28', '#5c6bc0', '#90a4ae'];
       const data: any[] = [];
       categories.forEach((cat, idx) => {
+          // Total quantity sum for better "Total Asset" visualization
           const totalUnitsInCat = items.filter(i => i.categoryId === cat.id).reduce((acc, i) => acc + i.quantity, 0);
           if (totalUnitsInCat > 0) {
               data.push({ name: cat.name, value: totalUnitsInCat, color: colors[idx % colors.length] });
@@ -1488,20 +1558,32 @@ const App = () => {
                                             <span className="stat-label">Total Seluruh Aset</span>
                                             <span className="stat-value highlight-success">{items.reduce((acc, i) => acc + i.quantity, 0)} Unit</span>
                                         </div>
-                                        <div className="category-summary-list">
-                                            {categories.map(cat => {
-                                                const totalInCat = items.filter(i => i.categoryId === cat.id).reduce((acc, i) => acc + i.quantity, 0);
-                                                return (
-                                                    <div key={cat.id} className="stat-row-sm">
-                                                        <span>{cat.name}</span>
-                                                        <span className="stat-value-sm">{totalInCat} Unit</span>
-                                                    </div>
-                                                );
-                                            })}
+                                        {/* Visualization of assets per category */}
+                                        <div style={{ marginTop: '1.5rem' }}>
+                                            <h4 style={{ fontSize: '1rem', color: 'var(--secondary-color)', marginBottom: '0.5rem', textAlign: 'center' }}>Jumlah Unit Per Kategori</h4>
+                                            <BorrowedFrequencyChart 
+                                                data={categories.map(cat => ({
+                                                    name: cat.name,
+                                                    count: items.filter(i => i.categoryId === cat.id).reduce((acc, i) => acc + i.quantity, 0)
+                                                })).filter(d => d.count > 0)} 
+                                                barColor="var(--success-color)"
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="report-card"><h3>Populer</h3><SimpleBarChart data={popularItems} /></div>
+                                <div className="report-card">
+                                    <h3>Ringkasan Transaksi</h3>
+                                    <div className="summary-stats-vertical">
+                                        <div className="stat-row main-stat" style={{ backgroundColor: 'rgba(92, 107, 192, 0.1)', borderColor: 'var(--info-color)' }}>
+                                            <span className="stat-label">Total Transaksi Peminjaman</span>
+                                            <span className="stat-value" style={{ color: 'var(--info-color)' }}>{loanHistory.length} Transaksi</span>
+                                        </div>
+                                        <div style={{ marginTop: '1.5rem' }}>
+                                            <h4 style={{ fontSize: '1rem', color: 'var(--secondary-color)', marginBottom: '0.5rem', textAlign: 'center' }}>Barang Paling Sering Dipinjam</h4>
+                                            <BorrowedFrequencyChart data={popularItems} />
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="report-card"><SimpleLineChart data={getLast7DaysData()} title="Tren 7 Hari" /></div>
                                 <div className="report-card">
                                     <SimpleDonutChart data={getCategoryData()} title="Proporsi Aset per Kategori" />
